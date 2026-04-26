@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#393e46">
+  <title>JSA Digital — Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="style.css" rel="stylesheet">
+</head>
+<body>
+
+<div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<header class="mobile-header">
+  <div class="mobile-header-logo"><i class="bi bi-shield-check"></i></div>
+  <div class="mobile-header-info">
+    <div class="mobile-header-title">JSA Digital</div>
+    <div class="mobile-header-subtitle">Dashboard</div>
+  </div>
+  <div class="mobile-header-right">
+    <button class="mobile-icon-btn" onclick="location.href='jsa-form.html'"><i class="bi bi-plus-lg"></i></button>
+    <button class="mobile-icon-btn" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+  </div>
+</header>
+
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-logo"><i class="bi bi-shield-check"></i></div>
+    <span class="sidebar-brand-text">JSA Digital</span>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a href="index.html"    class="nav-item active"><span class="nav-icon"><i class="bi bi-speedometer2"></i></span> Dashboard</a>
+    <a href="company.html"  class="nav-item"><span class="nav-icon"><i class="bi bi-building"></i></span> Perusahaan</a>
+    <a href="project.html"  class="nav-item"><span class="nav-icon"><i class="bi bi-clipboard-data"></i></span> Proyek</a>
+    <a href="jsa-form.html" class="nav-item"><span class="nav-icon"><i class="bi bi-journal-plus"></i></span> Form JSA</a>
+    <a href="jsa-list.html" class="nav-item"><span class="nav-icon"><i class="bi bi-journal-check"></i></span> Daftar JSA</a>
+    <a href="report.html"   class="nav-item"><span class="nav-icon"><i class="bi bi-file-earmark-pdf"></i></span> Laporan</a>
+  </div>
+  <div class="sidebar-footer"><i class="bi bi-database"></i> Local Storage v2.0</div>
+</nav>
+
+<main class="main-content">
+  <div class="page-header no-print">
+    <h2 class="page-title"><span class="title-icon"><i class="bi bi-speedometer2"></i></span>Dashboard</h2>
+    <a href="jsa-form.html" class="btn btn-primary btn-lg"><i class="bi bi-plus-lg"></i> JSA Baru</a>
+  </div>
+
+  <!-- Stats -->
+  <div class="stat-grid">
+    <div class="stat-card stat-blue">
+      <div class="stat-card-icon"><i class="bi bi-clipboard-data"></i></div>
+      <div class="stat-card-value" id="sProjects">0</div>
+      <div class="stat-card-label">Proyek</div>
+    </div>
+    <div class="stat-card stat-green">
+      <div class="stat-card-icon"><i class="bi bi-journal-check"></i></div>
+      <div class="stat-card-value" id="sJSA">0</div>
+      <div class="stat-card-label">Total JSA</div>
+    </div>
+    <div class="stat-card stat-amber">
+      <div class="stat-card-icon"><i class="bi bi-clock-history"></i></div>
+      <div class="stat-card-value" id="sPending">0</div>
+      <div class="stat-card-label">Pending</div>
+    </div>
+    <div class="stat-card stat-green">
+      <div class="stat-card-icon"><i class="bi bi-check-circle"></i></div>
+      <div class="stat-card-value" id="sApproved">0</div>
+      <div class="stat-card-label">Disetujui</div>
+    </div>
+  </div>
+
+  <!-- Risk Distribution -->
+  <div class="card">
+    <div class="card-header"><i class="bi bi-bar-chart-line"></i> Distribusi Risiko</div>
+    <div class="card-body" id="riskChart">
+      <div class="empty-state"><div class="empty-icon"><i class="bi bi-bar-chart"></i></div><p>Belum ada data risiko</p></div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-md-7">
+      <div class="card">
+        <div class="card-header">
+          <i class="bi bi-journal-text"></i> JSA Terbaru
+          <a href="jsa-list.html" class="ms-auto btn btn-xs btn-ghost">Lihat Semua <i class="bi bi-chevron-right"></i></a>
+        </div>
+        <div id="recentJSA"><div class="empty-state"><div class="empty-icon"><i class="bi bi-journal"></i></div><p>Belum ada JSA</p></div></div>
+      </div>
+    </div>
+    <div class="col-md-5">
+      <div class="card">
+        <div class="card-header">
+          <i class="bi bi-building"></i> Proyek Aktif
+          <a href="project.html" class="ms-auto btn btn-xs btn-ghost">Lihat Semua <i class="bi bi-chevron-right"></i></a>
+        </div>
+        <div id="recentProjects"><div class="empty-state"><div class="empty-icon"><i class="bi bi-clipboard-data"></i></div><p>Belum ada proyek</p></div></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <a href="index.html"    class="bottom-nav-item active"><i class="bi bi-speedometer2"></i>Beranda</a>
+    <a href="project.html"  class="bottom-nav-item"><i class="bi bi-clipboard-data"></i>Proyek</a>
+    <div class="bottom-nav-fab"><a href="jsa-form.html"><i class="bi bi-plus-lg"></i></a></div>
+    <a href="jsa-list.html" class="bottom-nav-item"><i class="bi bi-journal-check"></i>JSA</a>
+    <a href="report.html"   class="bottom-nav-item"><i class="bi bi-file-earmark-pdf"></i>Laporan</a>
+  </div>
+</nav>
+
+<script src="storage.js"></script>
+<script src="app.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  updateAllCompanyLogos();
+  loadDashboard();
+});
+
+function loadDashboard() {
+  const stats = getJSAStats(), jsas = getAllJSA(), projects = getAllProjects();
+  document.getElementById('sProjects').textContent  = stats.totalProjects;
+  document.getElementById('sJSA').textContent       = stats.totalJSA;
+  document.getElementById('sPending').textContent   = stats.totalDraft + stats.totalReview;
+  document.getElementById('sApproved').textContent  = stats.totalApproved;
+
+  // Risk bars
+  const rc = { Rendah:0, Sedang:0, Tinggi:0, Ekstrim:0 };
+  jsas.forEach(j => (j.hazard_identification||[]).forEach(h => { const r=calculateRisk(h.severity,h.likelihood); if(rc[r.category]!==undefined) rc[r.category]++; }));
+  const tot = Object.values(rc).reduce((a,b)=>a+b,0);
+  if (tot > 0) {
+    const cfg = { Rendah:{c:'#10b981',cls:'risk-low'}, Sedang:{c:'#f59e0b',cls:'risk-medium'}, Tinggi:{c:'#f97316',cls:'risk-high'}, Ekstrim:{c:'#ef4444',cls:'risk-extreme'} };
+    document.getElementById('riskChart').innerHTML = Object.entries(rc).map(([cat,count]) => {
+      const pct = Math.round((count/tot)*100);
+      return `<div class="risk-bar-item"><div class="risk-bar-header"><span class="badge-risk ${cfg[cat].cls}">${cat}</span><strong style="font-size:.82rem;">${count}</strong></div><div class="risk-bar-track"><div class="risk-bar-fill" style="width:${pct}%;background:${cfg[cat].c};"></div></div></div>`;
+    }).join('');
+  }
+
+  // Recent JSA
+  const recentJSAs = [...jsas].sort((a,b)=>new Date(b.updated_at||b.created_at)-new Date(a.updated_at||a.created_at)).slice(0,5);
+  if (recentJSAs.length) {
+    document.getElementById('recentJSA').innerHTML = recentJSAs.map(j => {
+      const proj = getProjectById(j.project_id);
+      return `<a href="jsa-form.html?jsa_id=${j.id}" class="list-item">
+        <div class="list-item-icon" style="background:rgba(248,181,0,.08);color:var(--yellow);"><i class="bi bi-journal-text"></i></div>
+        <div style="flex:1;min-width:0;">
+          <div class="list-item-title">${j.job_name}</div>
+          <div class="list-item-sub">${j.document_number} &bull; ${proj?proj.name:'-'}</div>
+        </div>
+        <div class="list-item-end">${getStatusBadge(j.status)}<span class="text-muted">${timeAgo(j.updated_at||j.created_at)}</span></div>
+      </a>`;
+    }).join('');
+  }
+
+  // Projects
+  const ap = projects.filter(p=>p.status==='aktif').slice(-4).reverse();
+  if (ap.length) {
+    document.getElementById('recentProjects').innerHTML = ap.map(p => {
+      const jc = getJSAByProject(p.id).length;
+      return `<a href="jsa-list.html?project_id=${p.id}" class="list-item">
+        <div class="list-item-icon" style="background:rgba(16,185,129,.08);color:var(--success);"><i class="bi bi-building"></i></div>
+        <div style="flex:1;min-width:0;"><div class="list-item-title">${p.name}</div><div class="list-item-sub">${p.client||'-'}</div></div>
+        <div class="list-item-end"><span class="badge bg-info">${jc} JSA</span><span class="badge bg-success">Aktif</span></div>
+      </a>`;
+    }).join('');
+  }
+}
+</script>
+</body>
+</html>

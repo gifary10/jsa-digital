@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#393e46">
+  <title>JSA Digital — Perusahaan</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="style.css" rel="stylesheet">
+</head>
+<body>
+
+<div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<header class="mobile-header">
+  <div class="mobile-header-logo"><i class="bi bi-shield-check"></i></div>
+  <div class="mobile-header-info">
+    <div class="mobile-header-title">JSA Digital</div>
+    <div class="mobile-header-subtitle">Perusahaan</div>
+  </div>
+  <div class="mobile-header-right">
+    <button class="mobile-icon-btn" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+  </div>
+</header>
+
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-logo"><i class="bi bi-shield-check"></i></div>
+    <span class="sidebar-brand-text">JSA Digital</span>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a href="index.html"    class="nav-item"><span class="nav-icon"><i class="bi bi-speedometer2"></i></span> Dashboard</a>
+    <a href="company.html"  class="nav-item active"><span class="nav-icon"><i class="bi bi-building"></i></span> Perusahaan</a>
+    <a href="project.html"  class="nav-item"><span class="nav-icon"><i class="bi bi-clipboard-data"></i></span> Proyek</a>
+    <a href="jsa-form.html" class="nav-item"><span class="nav-icon"><i class="bi bi-journal-plus"></i></span> Form JSA</a>
+    <a href="jsa-list.html" class="nav-item"><span class="nav-icon"><i class="bi bi-journal-check"></i></span> Daftar JSA</a>
+    <a href="report.html"   class="nav-item"><span class="nav-icon"><i class="bi bi-file-earmark-pdf"></i></span> Laporan</a>
+  </div>
+  <div class="sidebar-footer"><i class="bi bi-database"></i> Local Storage v2.0</div>
+</nav>
+
+<main class="main-content">
+  <div class="page-header no-print">
+    <h2 class="page-title"><span class="title-icon"><i class="bi bi-building"></i></span>Profil Perusahaan</h2>
+  </div>
+
+  <div class="row g-3">
+    <!-- Form -->
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-header"><i class="bi bi-pencil-square"></i> Informasi Perusahaan</div>
+        <div class="card-body">
+          <form id="companyForm">
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label">Nama Perusahaan <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="companyName" required placeholder="PT. Contoh Kontraktor">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label">Bidang Usaha</label>
+                <input type="text" class="form-control" id="businessType" placeholder="Kontraktor Sipil / Migas">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label">HSE Officer</label>
+                <input type="text" class="form-control" id="hseOfficer" placeholder="Nama HSE Officer">
+              </div>
+              <div class="col-12">
+                <label class="form-label">Alamat Lengkap</label>
+                <textarea class="form-control" id="address" rows="2" placeholder="Jl. Contoh No. 123, Kota, Provinsi"></textarea>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label">Telepon / Kontak</label>
+                <input type="text" class="form-control" id="contact" placeholder="+62 812-3456-7890">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" placeholder="info@perusahaan.com">
+              </div>
+            </div>
+            <div class="d-flex gap-2 mt-4">
+              <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Simpan</button>
+              <button type="button" class="btn btn-outline-secondary" onclick="loadCompanyData()"><i class="bi bi-arrow-counterclockwise"></i> Reset</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Logo & Info -->
+    <div class="col-lg-4">
+      <!-- Logo Upload -->
+      <div class="card">
+        <div class="card-header"><i class="bi bi-image"></i> Logo Perusahaan</div>
+        <div class="card-body text-center">
+          <div id="logoBox" onclick="document.getElementById('logoInput').click()"
+            style="border:2px dashed var(--border-mid);border-radius:12px;padding:18px;min-height:110px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color .2s,background .2s;margin-bottom:12px;"
+            onmouseover="this.style.borderColor='var(--yellow)';this.style.background='rgba(248,181,0,.04)'"
+            onmouseout="this.style.borderColor='var(--border-mid)';this.style.background=''">
+            <img id="logoImg" src="" alt="Logo" style="max-height:90px;max-width:100%;display:none;border-radius:8px;">
+            <div id="logoPlaceholder">
+              <i class="bi bi-cloud-upload" style="font-size:2rem;color:var(--text-3);display:block;margin-bottom:6px;"></i>
+              <div style="font-size:.76rem;color:var(--text-3);">Klik untuk upload logo</div>
+            </div>
+          </div>
+          <input type="file" class="d-none" id="logoInput" accept="image/*" onchange="previewLogo(event)">
+          <input type="hidden" id="logoBase64">
+          <button class="btn btn-sm btn-outline-primary w-100 mb-2" onclick="document.getElementById('logoInput').click()">
+            <i class="bi bi-upload"></i> Pilih Logo
+          </button>
+          <button class="btn btn-sm btn-outline-danger w-100" id="clearLogoBtn" onclick="clearLogo()" style="display:none">
+            <i class="bi bi-trash"></i> Hapus Logo
+          </button>
+          <p class="form-text mt-2">JPG, PNG, SVG. Maks. 2MB.</p>
+        </div>
+      </div>
+
+      <!-- Storage Info -->
+      <div class="card">
+        <div class="card-header"><i class="bi bi-info-circle"></i> Info Aplikasi</div>
+        <div class="card-body">
+          <div style="font-size:.8rem;line-height:2;">
+            <div><span style="color:var(--text-3);">Versi</span> &nbsp; <strong>JSA Digital v2.0</strong></div>
+            <div><span style="color:var(--text-3);">Storage</span> &nbsp; <strong>Browser Local</strong></div>
+            <div id="storageInfo"><span style="color:var(--text-3);">Digunakan</span> &nbsp; <strong>Menghitung...</strong></div>
+          </div>
+          <hr style="margin:10px 0;">
+          <div class="d-grid gap-2">
+            <button class="btn btn-sm btn-outline-danger"  onclick="clearAllData()"><i class="bi bi-trash3"></i> Hapus Semua Data</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <a href="index.html"    class="bottom-nav-item"><i class="bi bi-speedometer2"></i>Beranda</a>
+    <a href="project.html"  class="bottom-nav-item"><i class="bi bi-clipboard-data"></i>Proyek</a>
+    <div class="bottom-nav-fab"><a href="jsa-form.html"><i class="bi bi-plus-lg"></i></a></div>
+    <a href="jsa-list.html" class="bottom-nav-item"><i class="bi bi-journal-check"></i>JSA</a>
+    <a href="report.html"   class="bottom-nav-item"><i class="bi bi-file-earmark-pdf"></i>Laporan</a>
+  </div>
+</nav>
+
+<script src="storage.js"></script>
+<script src="app.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  loadCompanyData();
+  updateStorageInfo();
+  updateAllCompanyLogos();
+  document.getElementById('companyForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    saveCompanyData();
+  });
+});
+
+function loadCompanyData() {
+  const c = getCompany();
+  if (c) {
+    document.getElementById('companyName').value  = c.name          || '';
+    document.getElementById('businessType').value = c.business_type || '';
+    document.getElementById('address').value      = c.address       || '';
+    document.getElementById('contact').value      = c.contact       || '';
+    document.getElementById('email').value        = c.email         || '';
+    document.getElementById('hseOfficer').value   = c.hse_officer   || '';
+    document.getElementById('logoBase64').value   = c.logo          || '';
+    if (c.logo) showLogoPreview(c.logo);
+  }
+}
+
+function saveCompanyData() {
+  const company = {
+    id: 'comp_main',
+    name:          document.getElementById('companyName').value.trim(),
+    business_type: document.getElementById('businessType').value.trim(),
+    address:       document.getElementById('address').value.trim(),
+    contact:       document.getElementById('contact').value.trim(),
+    email:         document.getElementById('email').value.trim(),
+    hse_officer:   document.getElementById('hseOfficer').value.trim(),
+    logo:          document.getElementById('logoBase64').value,
+    updated_at:    new Date().toISOString()
+  };
+  saveData(STORAGE_KEYS.COMPANY, [company]);
+  addAudit('UPDATE_COMPANY', 'Profil perusahaan diperbarui');
+  updateAllCompanyLogos();
+  showToast('Profil berhasil disimpan!', 'success');
+  updateStorageInfo();
+}
+
+function previewLogo(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) { showToast('Maks. 2MB!', 'danger'); return; }
+  const reader = new FileReader();
+  reader.onload = e => { document.getElementById('logoBase64').value = e.target.result; showLogoPreview(e.target.result); };
+  reader.readAsDataURL(file);
+}
+
+function showLogoPreview(src) {
+  document.getElementById('logoImg').src = src;
+  document.getElementById('logoImg').style.display = 'block';
+  document.getElementById('logoPlaceholder').style.display = 'none';
+  document.getElementById('clearLogoBtn').style.display = 'block';
+}
+
+function clearLogo() {
+  document.getElementById('logoBase64').value = '';
+  document.getElementById('logoImg').src = '';
+  document.getElementById('logoImg').style.display = 'none';
+  document.getElementById('logoPlaceholder').style.display = 'block';
+  document.getElementById('clearLogoBtn').style.display = 'none';
+  document.getElementById('logoInput').value = '';
+}
+
+function updateStorageInfo() {
+  let total = 0;
+  Object.values(STORAGE_KEYS).forEach(k => { const i = localStorage.getItem(k); if (i) total += i.length; });
+  document.getElementById('storageInfo').innerHTML = `<span style="color:var(--text-3);">Digunakan</span> &nbsp; <strong>~${(total/1024).toFixed(1)} KB</strong>`;
+}
+
+function clearAllData() {
+  if (!confirm('⚠️ HAPUS SEMUA DATA?\n\nTidak bisa dibatalkan!')) return;
+  if (!confirm('Konfirmasi: hapus semua data?')) return;
+  Object.values(STORAGE_KEYS).forEach(k => localStorage.removeItem(k));
+  initStorage();
+  updateAllCompanyLogos();
+  showToast('Data dihapus.', 'warning');
+  setTimeout(() => location.reload(), 900);
+}
+</script>
+</body>
+</html>

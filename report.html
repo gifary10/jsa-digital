@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#393e46">
+  <title>JSA Digital — Laporan</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="style.css" rel="stylesheet">
+  <style>
+    .sig-box { border:1px solid #dee2e6; border-radius:8px; padding:10px; text-align:center; min-height:76px; display:flex; flex-direction:column; justify-content:space-between; }
+    .sig-name { font-weight:700; font-size:.8rem; border-top:1px solid #dee2e6; padding-top:6px; margin-top:14px; }
+    .sig-label { font-size:.7rem; color:#718096; }
+  </style>
+</head>
+<body>
+
+<div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<header class="mobile-header no-print">
+  <div class="mobile-header-logo"><i class="bi bi-shield-check"></i></div>
+  <div class="mobile-header-info">
+    <div class="mobile-header-title">JSA Digital</div>
+    <div class="mobile-header-subtitle">Laporan</div>
+  </div>
+  <div class="mobile-header-right">
+    <button class="mobile-icon-btn" onclick="window.print()" title="Cetak PDF"><i class="bi bi-printer"></i></button>
+    <button class="mobile-icon-btn" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+  </div>
+</header>
+
+<nav class="sidebar no-print" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-logo"><i class="bi bi-shield-check"></i></div>
+    <span class="sidebar-brand-text">JSA Digital</span>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a href="index.html"    class="nav-item"><span class="nav-icon"><i class="bi bi-speedometer2"></i></span> Dashboard</a>
+    <a href="company.html"  class="nav-item"><span class="nav-icon"><i class="bi bi-building"></i></span> Perusahaan</a>
+    <a href="project.html"  class="nav-item"><span class="nav-icon"><i class="bi bi-clipboard-data"></i></span> Proyek</a>
+    <a href="jsa-form.html" class="nav-item"><span class="nav-icon"><i class="bi bi-journal-plus"></i></span> Form JSA</a>
+    <a href="jsa-list.html" class="nav-item"><span class="nav-icon"><i class="bi bi-journal-check"></i></span> Daftar JSA</a>
+    <a href="report.html"   class="nav-item active"><span class="nav-icon"><i class="bi bi-file-earmark-pdf"></i></span> Laporan</a>
+  </div>
+  <div class="sidebar-footer"><i class="bi bi-database"></i> Local Storage v2.0</div>
+</nav>
+
+<main class="main-content">
+  <!-- Toolbar -->
+  <div class="page-header no-print">
+    <h2 class="page-title"><span class="title-icon"><i class="bi bi-file-earmark-pdf"></i></span>Laporan JSA</h2>
+    <div class="d-flex gap-2 align-items-center flex-wrap">
+      <a id="editLink" href="jsa-form.html" class="btn btn-outline-primary btn-sm" style="display:none;"><i class="bi bi-pencil"></i> Edit</a>
+      <button class="btn btn-primary btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Cetak PDF</button>
+    </div>
+  </div>
+
+  <!-- JSA Selector -->
+  <div class="card no-print">
+    <div class="card-body" style="padding:12px;">
+      <div class="row g-2 align-items-center">
+        <div class="col">
+          <select class="form-select" id="jsaSelect" onchange="loadReport()">
+            <option value="">-- Pilih JSA untuk ditampilkan --</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Report Output -->
+  <div id="reportOutput">
+    <div class="report-container">
+      <div class="empty-state"><div class="empty-icon"><i class="bi bi-file-earmark-text"></i></div><p>Pilih JSA di atas untuk menampilkan laporan</p></div>
+    </div>
+  </div>
+</main>
+
+<nav class="bottom-nav no-print">
+  <div class="bottom-nav-inner">
+    <a href="index.html"    class="bottom-nav-item"><i class="bi bi-speedometer2"></i>Beranda</a>
+    <a href="project.html"  class="bottom-nav-item"><i class="bi bi-clipboard-data"></i>Proyek</a>
+    <div class="bottom-nav-fab"><a href="jsa-form.html"><i class="bi bi-plus-lg"></i></a></div>
+    <a href="jsa-list.html" class="bottom-nav-item"><i class="bi bi-journal-check"></i>JSA</a>
+    <a href="report.html"   class="bottom-nav-item active"><i class="bi bi-file-earmark-pdf"></i>Laporan</a>
+  </div>
+</nav>
+
+<script src="storage.js"></script>
+<script src="app.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  updateAllCompanyLogos();
+  populateSelect();
+  const id = new URLSearchParams(window.location.search).get('jsa_id');
+  if (id) { document.getElementById('jsaSelect').value = id; loadReport(); }
+});
+
+function populateSelect() {
+  const sel = document.getElementById('jsaSelect');
+  const jsas = getAllJSA().sort((a,b) => new Date(b.updated_at||b.created_at) - new Date(a.updated_at||a.created_at));
+  jsas.forEach(j => {
+    const o = document.createElement('option');
+    o.value = j.id;
+    o.textContent = `${j.document_number} — ${j.job_name}`;
+    sel.appendChild(o);
+  });
+}
+
+function loadReport() {
+  const id = document.getElementById('jsaSelect').value;
+  if (!id) return;
+  const jsa = getJSAById(id), proj = jsa ? getProjectById(jsa.project_id) : null, co = getCompany();
+  if (!jsa) { document.getElementById('reportOutput').innerHTML = '<div class="alert alert-danger m-3">JSA tidak ditemukan.</div>'; return; }
+
+  const el = document.getElementById('editLink');
+  el.href = 'jsa-form.html?jsa_id=' + jsa.id;
+  el.style.display = 'inline-flex';
+
+  const scColors = { draft:'#6c757d', review:'#d97706', approved:'#16a34a', rejected:'#dc3545' };
+  const ppeList  = getPPEList(jsa.ppe||{});
+  const permitKeys = ['hot_work','confined_space','working_height','electrical','lifting','excavation','pressure_test','radiation'];
+  const activePermits = permitKeys.filter(k => jsa.permits?.[k]?.required);
+
+  const sec  = (n,t) => `<div class="report-section-title">${n}. ${t}</div>`;
+  const tbl  = rows => `<table class="table table-bordered table-sm mb-0">${rows}</table>`;
+  const row2 = (lbl, val) => `<tr><td width="28%" style="font-weight:600;background:#f8fafc;font-size:.76rem;">${lbl}</td><td style="font-size:.78rem;">${val||'-'}</td></tr>`;
+
+  let html = `<div class="report-container">`;
+
+  // ── Header ──────────────────────────────────────────
+  html += `<div class="report-header">
+    <div class="row align-items-center g-2">
+      <div class="col-2">${co?.logo?`<img src="${co.logo}" class="report-logo" alt="Logo">`:`<div style="width:70px;height:50px;background:#e2e8f0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.62rem;color:#718096;">LOGO</div>`}</div>
+      <div class="col-8 text-center">
+        <div style="font-size:1rem;font-weight:800;color:#393e46;text-transform:uppercase;letter-spacing:.4px;font-family:'Plus Jakarta Sans',sans-serif;">JOB SAFETY ANALYSIS (JSA)</div>
+        <div style="font-size:.78rem;color:#718096;margin-top:1px;">${co?.name||'Nama Perusahaan'}</div>
+        ${co?.address?`<div style="font-size:.68rem;color:#a0aec0;">${co.address}</div>`:''}
+      </div>
+      <div class="col-2 text-end">
+        <div style="font-size:.76rem;font-weight:700;">${jsa.document_number}</div>
+        <div style="font-size:.7rem;color:#718096;">Rev: ${jsa.revision||'0'}</div>
+        <div style="margin-top:4px;"><span style="background:${scColors[jsa.status]||'#6c757d'};color:white;padding:2px 7px;border-radius:8px;font-weight:700;font-size:.66rem;">${(jsa.status||'').toUpperCase()}</span></div>
+      </div>
+    </div>
+  </div>`;
+
+  // ── 1. Informasi Umum ────────────────────────────────
+  html += sec(1,'INFORMASI UMUM');
+  html += tbl(`<tbody>
+    ${row2('Nama Pekerjaan','<strong>'+jsa.job_name+'</strong>')}
+    ${row2('Proyek',proj?`${proj.name} &nbsp;|&nbsp; Client: ${proj.client||'-'}`:'-')}
+    ${row2('Lokasi',proj?.location||'-')}
+    ${row2('Tanggal',formatDate(jsa.date))}
+    ${row2('PIC Proyek',proj?.pic||'-')}
+  </tbody>`);
+
+  // ── 2. Peralatan ─────────────────────────────────────
+  html += sec(2,'PERALATAN & MATERIAL');
+  html += tbl(`<tbody>
+    ${row2('Alat Kerja',(jsa.tools||[]).join(', ')||'-')}
+    ${row2('Material',(jsa.materials||[]).join(', ')||'-')}
+    ${row2('Bahan Berbahaya B3',(jsa.hazardous_materials||[]).join(', ')||'-')}
+  </tbody>`);
+
+  // ── 3. APD ───────────────────────────────────────────
+  html += sec(3,'APD WAJIB DIGUNAKAN');
+  html += `<div style="padding:8px 0;">`;
+  if (ppeList.length) {
+    html += ppeList.map(p=>`<span style="display:inline-block;background:#fef9e7;color:#393e46;border:1px solid #fde68a;padding:2px 8px;border-radius:10px;margin:2px;font-size:.74rem;font-weight:600;">${p}</span>`).join('');
+  } else { html += '<span style="color:#718096;font-size:.78rem;">-</span>'; }
+  html += `</div>`;
+
+  // ── 4. Identifikasi Bahaya ───────────────────────────
+  html += sec(4,'IDENTIFIKASI BAHAYA & PENGENDALIAN RISIKO');
+  if (jsa.hazard_identification?.length) {
+    html += `<table class="table table-bordered table-sm">
+      <thead style="background:#393e46;color:white;font-size:.72rem;">
+        <tr><th>No</th><th>Tahapan Kerja</th><th>Potensi Bahaya</th><th>Dampak</th><th>Keparahan</th><th>Kemungkinan</th><th>Tingkat Risiko</th><th>Pengendalian</th></tr>
+      </thead><tbody>`;
+    jsa.hazard_identification.forEach((h,i)=>{
+      const risk = calculateRisk(h.severity, h.likelihood);
+      const riskColors = { Rendah:'#dcfce7', Sedang:'#fef9c3', Tinggi:'#ffedd5', Ekstrim:'#fee2e2' };
+      const riskFg     = { Rendah:'#15803d', Sedang:'#a16207', Tinggi:'#c2410c', Ekstrim:'#b91c1c' };
+      html+=`<tr style="font-size:.74rem;">
+        <td class="text-center">${i+1}</td><td>${h.step||'-'}</td><td>${h.danger||'-'}</td>
+        <td>${h.impact||'-'}</td>
+        <td class="text-center">${h.severity||'-'}</td>
+        <td class="text-center">${h.likelihood||'-'}</td>
+        <td class="text-center"><span style="background:${riskColors[risk.category]||'#f1f5f9'};color:${riskFg[risk.category]||'#64748b'};padding:2px 7px;border-radius:8px;font-weight:700;font-size:.68rem;">${risk.level>0?`${risk.level} - ${risk.category}`:'-'}</span></td>
+        <td>${h.control||'-'}</td>
+      </tr>`;
+    });
+    html += `</tbody></table>`;
+  } else { html += '<p class="text-muted" style="font-size:.78rem;">Tidak ada data.</p>'; }
+
+  // ── 5. Tindakan Darurat ──────────────────────────────
+  html += sec(5,'TINDAKAN DARURAT');
+  html += tbl(`<tbody>
+    ${row2('Jenis Kondisi Darurat',jsa.emergency?.type)}
+    ${row2('Prosedur',jsa.emergency?.procedure?`<div style="white-space:pre-line;font-size:.76rem;">${jsa.emergency.procedure}</div>`:'-')}
+    ${row2('Titik Kumpul',jsa.emergency?.assembly_point)}
+    ${row2('Nomor Darurat',jsa.emergency?.emergency_number)}
+  </tbody>`);
+
+  // ── 6. Man Power ─────────────────────────────────────
+  html += sec(6,'DATA MAN POWER');
+  if (jsa.manpower?.length) {
+    html += `<table class="table table-bordered table-sm"><thead style="background:#393e46;color:white;font-size:.72rem;"><tr><th>No</th><th>Nama</th><th>Jabatan</th></tr></thead><tbody>`;
+    jsa.manpower.forEach((m,i)=>{ html+=`<tr style="font-size:.74rem;"><td>${i+1}</td><td>${m.name||'-'}</td><td>${m.position||'-'}</td></tr>`; });
+    html += `</tbody></table>`;
+  } else { html += '<p class="text-muted" style="font-size:.78rem;">Tidak ada data.</p>'; }
+
+  // ── 7. Permit ────────────────────────────────────────
+  html += sec(7,'PERMIT TO WORK (PTW)');
+  if (activePermits.length) {
+    html += `<div style="padding:8px 0;">`;
+    activePermits.forEach(key=>{
+      html += `<span style="display:inline-block;background:#fff7ed;color:#9a3412;border:1px solid #fed7aa;padding:3px 10px;border-radius:10px;margin:2px;font-size:.74rem;font-weight:600;">${PERMIT_LABELS[key]||key}</span>`;
+    });
+    if(jsa.permits?.other) html += `<br><span style="display:inline-block;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;padding:3px 10px;border-radius:10px;margin:4px 2px 2px;font-size:.74rem;font-weight:600;">Lainnya: ${jsa.permits.other}</span>`;
+    html += `</div>`;
+  } else { html += '<p class="text-muted" style="font-size:.78rem;">Tidak ada permit yang diperlukan.</p>'; }
+
+  // ── 8. Approval ──────────────────────────────────────
+  html += sec(8,'PENGESAHAN DOKUMEN');
+  html += `<div class="row g-2 mt-1">
+    <div class="col-4"><div class="sig-box"><div class="sig-label">Disusun Oleh</div><div class="sig-name">${jsa.prepared_by||'&nbsp;'}</div></div></div>
+    <div class="col-4"><div class="sig-box"><div class="sig-label">Diperiksa Oleh</div><div class="sig-name">${jsa.reviewed_by||'&nbsp;'}</div></div></div>
+    <div class="col-4"><div class="sig-box"><div class="sig-label">Disetujui Oleh</div><div class="sig-name">${jsa.approved_by||'&nbsp;'}</div></div></div>
+  </div>`;
+
+  // ── Footer ───────────────────────────────────────────
+  html += `<div class="text-center mt-4 pt-3 border-top" style="font-size:.66rem;color:#a0aec0;">
+    JSA Digital v2.0 &nbsp;&bull;&nbsp; ${co?.name||''} &nbsp;&bull;&nbsp; ${new Date().toLocaleDateString('id-ID',{year:'numeric',month:'long',day:'numeric'})}
+  </div>`;
+
+  html += `</div>`;
+  document.getElementById('reportOutput').innerHTML = html;
+}
+</script>
+</body>
+</html>

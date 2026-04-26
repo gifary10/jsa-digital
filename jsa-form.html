@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#393e46">
+  <title>JSA Digital — Form JSA</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="style.css" rel="stylesheet">
+</head>
+<body>
+
+<div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<header class="mobile-header">
+  <button class="mobile-icon-btn" onclick="history.back()" style="margin-right:4px;"><i class="bi bi-arrow-left"></i></button>
+  <div class="mobile-header-info">
+    <div class="mobile-header-title" id="mobileFormTitle">Form JSA</div>
+    <div class="mobile-header-subtitle" id="mobileStepLabel">Step 1 dari 7</div>
+  </div>
+  <div class="mobile-header-right">
+    <button class="mobile-icon-btn" onclick="saveDraft()" title="Simpan Draft"><i class="bi bi-cloud-check"></i></button>
+    <button class="mobile-icon-btn" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+  </div>
+</header>
+
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-logo"><i class="bi bi-shield-check"></i></div>
+    <span class="sidebar-brand-text">JSA Digital</span>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a href="index.html"    class="nav-item"><span class="nav-icon"><i class="bi bi-speedometer2"></i></span> Dashboard</a>
+    <a href="company.html"  class="nav-item"><span class="nav-icon"><i class="bi bi-building"></i></span> Perusahaan</a>
+    <a href="project.html"  class="nav-item"><span class="nav-icon"><i class="bi bi-clipboard-data"></i></span> Proyek</a>
+    <a href="jsa-form.html" class="nav-item active"><span class="nav-icon"><i class="bi bi-journal-plus"></i></span> Form JSA</a>
+    <a href="jsa-list.html" class="nav-item"><span class="nav-icon"><i class="bi bi-journal-check"></i></span> Daftar JSA</a>
+    <a href="report.html"   class="nav-item"><span class="nav-icon"><i class="bi bi-file-earmark-pdf"></i></span> Laporan</a>
+  </div>
+  <div class="sidebar-footer"><i class="bi bi-database"></i> Local Storage v2.0</div>
+</nav>
+
+<main class="main-content">
+  <div class="page-header no-print">
+    <h2 class="page-title"><span class="title-icon"><i class="bi bi-journal-plus"></i></span><span id="pageTitle">Form JSA Baru</span></h2>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-secondary btn-sm" onclick="saveDraft()"><i class="bi bi-cloud-check"></i> Draft</button>
+      <a href="jsa-list.html" class="btn btn-outline-danger btn-sm"><i class="bi bi-x-lg"></i> Batal</a>
+    </div>
+  </div>
+
+  <div class="wizard-wrap">
+    <!-- Wizard Header -->
+    <div class="wizard-top no-print">
+      <div class="wizard-top-title"><i class="bi bi-journal-check"></i> Job Safety Analysis</div>
+      <div class="step-pills" id="stepPills"></div>
+    </div>
+
+    <!-- Step Body -->
+    <div class="wizard-body">
+      <div id="stepContent" class="step-content"></div>
+    </div>
+
+    <!-- Wizard Footer Nav -->
+    <div class="wizard-footer no-print">
+      <button class="btn btn-outline-secondary" id="btnPrev" onclick="prevStep()" style="display:none;">
+        <i class="bi bi-arrow-left"></i> Sebelumnya
+      </button>
+      <div class="ms-auto d-flex gap-2">
+        <button class="btn btn-primary" id="btnNext" onclick="nextStep()">
+          Lanjut <i class="bi bi-arrow-right"></i>
+        </button>
+        <button class="btn btn-success" id="btnFinish" onclick="finishJSA()" style="display:none;">
+          <i class="bi bi-check-lg"></i> Selesaikan
+        </button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Mobile bottom nav hidden on form page to avoid confusion with wizard nav -->
+<nav class="bottom-nav" style="display:none!important;"></nav>
+
+<script src="storage.js"></script>
+<script src="app.js"></script>
+<script>
+/* ===================== STATE ===================== */
+const TOTAL = 7;
+const LABELS = ['Info Umum','Peralatan','APD','Identifikasi Bahaya','Tindakan Darurat','Man Power','Permit & Approval'];
+let step = 1;
+let jsa  = null;
+
+/* ===================== WORK TYPE APD TEMPLATES (Loaded from data.json) ===================== */
+let WORK_TYPE_APD = {};
+
+/* ===================== LOAD APD DATA FROM JSON ===================== */
+async function loadAPDData() {
+  try {
+    const response = await fetch('data.json');
+    if (!response.ok) {
+      throw new Error('Failed to load data.json');
+    }
+    const data = await response.json();
+    WORK_TYPE_APD = data.work_type_apd;
+    console.log('APD data loaded successfully from data.json');
+  } catch (error) {
+    console.error('Error loading data.json:', error);
+    // Fallback to default data if JSON fails to load
+    WORK_TYPE_APD = getDefaultAPDData();
+    console.log('Using fallback APD data');
+  }
+}
+
+function getDefaultAPDData() {
+  return {
+    welding: {
+      label: 'Welding (Pengelasan)',
+      icon: 'bi-fire',
+      items: [
+        { id: 'welding_helmet', label: 'Helm Las (Auto Darkening)', category: 'kepala' },
+        { id: 'safety_glasses_weld', label: 'Kacamata Safety', category: 'mata' },
+        { id: 'leather_gloves', label: 'Sarung Tangan Tahan Panas (Leather)', category: 'tangan' },
+        { id: 'fire_resistant_apron', label: 'Apron / Baju Tahan Api', category: 'tubuh' },
+        { id: 'safety_shoes_weld', label: 'Sepatu Safety (Steel Toe)', category: 'kaki' },
+        { id: 'respirator_weld', label: 'Masker / Respirator', category: 'pernapasan' },
+        { id: 'ear_protection_weld', label: 'Pelindung Telinga (Earplug / Earmuff)', category: 'telinga' }
+      ]
+    },
+    electrical: {
+      label: 'Pekerjaan Listrik',
+      icon: 'bi-lightning-charge',
+      items: [
+        { id: 'non_conductive_helmet', label: 'Helm Safety (Non-Conductive)', category: 'kepala' },
+        { id: 'electrical_gloves', label: 'Sarung Tangan Isolasi Listrik', category: 'tangan' },
+        { id: 'electrical_shoes', label: 'Sepatu Safety Anti Listrik', category: 'kaki' },
+        { id: 'face_shield_elec', label: 'Kacamata Safety / Face Shield', category: 'mata' },
+        { id: 'arc_flash_suit', label: 'Arc Flash Suit (Tegangan Tinggi)', category: 'tubuh' },
+        { id: 'voltage_detector', label: 'Alat Deteksi Tegangan', category: 'lainnya' }
+      ]
+    },
+    working_height: {
+      label: 'Pekerjaan di Ketinggian',
+      icon: 'bi-arrow-up',
+      items: [
+        { id: 'full_body_harness', label: 'Full Body Harness', category: 'perangkat_jatuh' },
+        { id: 'lanyard_lifeline', label: 'Lanyard + Lifeline', category: 'perangkat_jatuh' },
+        { id: 'helmet_chin_strap', label: 'Helm Safety dengan Chin Strap', category: 'kepala' },
+        { id: 'anti_slip_shoes', label: 'Sepatu Anti Slip', category: 'kaki' },
+        { id: 'work_gloves_height', label: 'Sarung Tangan Kerja', category: 'tangan' }
+      ]
+    },
+    chemical: {
+      label: 'Pekerjaan Kimia',
+      icon: 'bi-droplet',
+      items: [
+        { id: 'chemical_suit', label: 'Baju Pelindung (Chemical Suit / Lab Coat)', category: 'tubuh' },
+        { id: 'chemical_gloves', label: 'Sarung Tangan Tahan Bahan Kimia', category: 'tangan' },
+        { id: 'goggles_chem', label: 'Kacamata Safety / Goggles', category: 'mata' },
+        { id: 'face_shield_chem', label: 'Face Shield', category: 'mata' },
+        { id: 'respirator_chem', label: 'Respirator / Masker Khusus', category: 'pernapasan' },
+        { id: 'rubber_boots_chem', label: 'Sepatu Boot Karet', category: 'kaki' }
+      ]
+    },
+    high_noise: {
+      label: 'Pekerjaan dengan Kebisingan Tinggi',
+      icon: 'bi-volume-up',
+      items: [
+        { id: 'earplug', label: 'Earplug', category: 'telinga' },
+        { id: 'earmuff', label: 'Earmuff', category: 'telinga' },
+        { id: 'helmet_noise', label: 'Helm Safety', category: 'kepala' },
+        { id: 'safety_glasses_noise', label: 'Kacamata Safety', category: 'mata' }
+      ]
+    },
+    mechanical: {
+      label: 'Pekerjaan Mekanik / Bengkel',
+      icon: 'bi-gear',
+      items: [
+        { id: 'safety_glasses_mech', label: 'Kacamata Safety', category: 'mata' },
+        { id: 'work_gloves_mech', label: 'Sarung Tangan Kerja', category: 'tangan' },
+        { id: 'safety_shoes_mech', label: 'Sepatu Safety', category: 'kaki' },
+        { id: 'coverall', label: 'Coverall / Wearpack', category: 'tubuh' },
+        { id: 'face_shield_grinding', label: 'Face Shield (Jika Grinding)', category: 'mata' }
+      ]
+    },
+    general_construction: {
+      label: 'Konstruksi Umum',
+      icon: 'bi-building',
+      items: [
+        { id: 'helmet_const', label: 'Helm Safety', category: 'kepala' },
+        { id: 'reflective_vest', label: 'Rompi Reflektif', category: 'tubuh' },
+        { id: 'safety_shoes_const', label: 'Sepatu Safety', category: 'kaki' },
+        { id: 'work_gloves_const', label: 'Sarung Tangan', category: 'tangan' },
+        { id: 'safety_glasses_const', label: 'Kacamata Safety', category: 'mata' },
+        { id: 'dust_mask_const', label: 'Masker Debu', category: 'pernapasan' }
+      ]
+    },
+    grinding_cutting: {
+      label: 'Grinding / Cutting',
+      icon: 'bi-tools',
+      items: [
+        { id: 'face_shield_grind', label: 'Face Shield', category: 'mata' },
+        { id: 'safety_glasses_grind', label: 'Kacamata Safety', category: 'mata' },
+        { id: 'gloves_grind', label: 'Sarung Tangan', category: 'tangan' },
+        { id: 'apron_grind', label: 'Apron', category: 'tubuh' },
+        { id: 'safety_shoes_grind', label: 'Sepatu Safety', category: 'kaki' },
+        { id: 'respirator_grind', label: 'Masker Debu / Respirator', category: 'pernapasan' }
+      ]
+    }
+  };
+}
+
+/* ===================== INIT ===================== */
+document.addEventListener('DOMContentLoaded', async function() {
+  // Load APD data from JSON first
+  await loadAPDData();
+  
+  updateAllCompanyLogos();
+  buildPills();
+  const p = new URLSearchParams(window.location.search);
+  const jsaId = p.get('jsa_id'), projId = p.get('project_id');
+  if (jsaId) {
+    jsa = getJSAById(jsaId);
+    if (!jsa) { 
+      showToast('JSA tidak ditemukan, membuat baru.','warning'); 
+      initNew(projId); 
+    } else { 
+      document.getElementById('pageTitle').textContent = 'Edit: ' + jsa.document_number; 
+      document.getElementById('mobileFormTitle').textContent = jsa.document_number; 
+    }
+  } else { 
+    // Check if project already has JSA
+    if (projId) {
+      const existingJSA = getJSAByProject(projId);
+      if (existingJSA.length > 0) {
+        showToast('Proyek ini sudah memiliki JSA. Hanya 1 JSA per proyek.','warning');
+        setTimeout(() => window.location.href='jsa-list.html', 1500);
+        return;
+      }
+    }
+    initNew(projId); 
+  }
+  renderStep();
+});
+
+function initNew(projId) {
+  jsa = {
+    id: 'jsa_' + Date.now(), 
+    project_id: projId||'',
+    job_name:'', 
+    document_number: generateDocNumber(), 
+    revision:'0',
+    date: new Date().toISOString().split('T')[0], 
+    tools:[], 
+    materials:[], 
+    hazardous_materials:[],
+    ppe: {
+      selected_work_types: [],
+      custom_items: []
+    },
+    hazard_identification:[],
+    emergency:{type:'',procedure:'',assembly_point:'',emergency_number:''},
+    manpower:[],
+    permits: { 
+      hot_work:{required:false}, 
+      confined_space:{required:false}, 
+      working_height:{required:false}, 
+      electrical:{required:false}, 
+      lifting:{required:false}, 
+      excavation:{required:false}, 
+      pressure_test:{required:false}, 
+      radiation:{required:false}, 
+      other:'' 
+    },
+    prepared_by: getCurrentUser(), 
+    reviewed_by:'', 
+    approved_by:'',
+    status:'draft', 
+    created_at: new Date().toISOString()
+  };
+}
+
+/* ===================== PILLS ===================== */
+function buildPills() {
+  document.getElementById('stepPills').innerHTML = LABELS.map((l,i) => `
+    <div class="step-pill" id="pill_${i+1}" onclick="jumpTo(${i+1})">
+      <span class="pill-num" id="pillnum_${i+1}">${i+1}</span>
+      ${l}
+    </div>`).join('');
+}
+
+function updatePills() {
+  for (let i = 1; i <= TOTAL; i++) {
+    const pill = document.getElementById('pill_'+i);
+    const num  = document.getElementById('pillnum_'+i);
+    if (!pill || !num) continue;
+    pill.className = 'step-pill' + (i===step?' active':(i<step?' done':''));
+    num.innerHTML  = i < step ? '<i class="bi bi-check-lg" style="font-size:.6rem;"></i>' : i;
+  }
+  document.getElementById('mobileStepLabel').textContent = `Step ${step} dari ${TOTAL}: ${LABELS[step-1]}`;
+}
+
+function jumpTo(s) {
+  if (s === step) return;
+  collect(step); // Always collect current step before jumping
+  saveJSA(jsa);
+  step = s;
+  renderStep();
+}
+
+/* ===================== NAVIGATION ===================== */
+function renderStep() {
+  updatePills();
+  document.getElementById('btnPrev').style.display   = step>1 ? 'inline-flex' : 'none';
+  document.getElementById('btnNext').style.display   = step<TOTAL ? 'inline-flex' : 'none';
+  document.getElementById('btnFinish').style.display = step===TOTAL ? 'inline-flex' : 'none';
+  const c = document.getElementById('stepContent');
+  c.classList.remove('step-content');
+  void c.offsetWidth;
+  c.innerHTML = buildHTML(step);
+  c.classList.add('step-content');
+  fill(step);
+}
+
+function prevStep() { 
+  if(step>1){ 
+    collect(step); 
+    step--; 
+    renderStep(); 
+  } 
+}
+
+function nextStep() { 
+  if(!validate(step)) return; 
+  collect(step); 
+  saveJSA(jsa); 
+  if(step<TOTAL){
+    step++;
+    renderStep();
+  } 
+}
+
+function saveDraft() { 
+  collect(step); 
+  saveJSA(jsa); 
+  showToast('Draft tersimpan: '+jsa.document_number,'success'); 
+}
+
+function finishJSA() {
+  if (!validate(TOTAL)) return;
+  collect(TOTAL);
+  jsa.status = 'review';
+  saveJSA(jsa);
+  showToast('JSA selesai! Status: Review','success');
+  setTimeout(() => window.location.href='report.html?jsa_id='+jsa.id, 1200);
+}
+
+/* ===================== VALIDATE ===================== */
+function validate(s) {
+  if (s===1) { 
+    const jobName = document.getElementById('jobName');
+    if (!jobName || !jobName.value?.trim()) { 
+      showToast('Nama pekerjaan wajib diisi!','warning'); 
+      return false; 
+    } 
+  }
+  if (s===3) { 
+    const selectedTypes = document.querySelectorAll('.work-type-toggle input:checked');
+    const customItems = document.getElementById('ppeCustomItems');
+    if (!selectedTypes.length && !(customItems && customItems.value?.trim())) { 
+      showToast('Minimal pilih 1 jenis pekerjaan atau isi APD kustom!','warning'); 
+      return false; 
+    } 
+  }
+  if (s===4) {
+    const rows = document.querySelectorAll('#hazardTbody tr[data-idx]');
+    if (!rows.length) { 
+      showToast('Minimal 1 identifikasi bahaya!','warning'); 
+      return false; 
+    }
+    for (const r of rows) { 
+      const stepInput = r.querySelector('.h-step');
+      const dangerInput = r.querySelector('.h-danger');
+      if (!stepInput || !stepInput.value?.trim() || !dangerInput || !dangerInput.value?.trim()) { 
+        showToast('Tahapan kerja & potensi bahaya wajib diisi!','warning'); 
+        return false; 
+      } 
+    }
+  }
+  return true;
+}
+
+/* ===================== COLLECT ===================== */
+function collect(s) {
+  if (!jsa) return;
+  const gv = id => {
+    const el = document.getElementById(id);
+    return el ? (el.value||'') : '';
+  };
+  
+  switch(s) {
+    case 1:
+      jsa.job_name=gv('jobName').trim(); 
+      jsa.document_number=gv('docNumber'); 
+      jsa.revision=gv('revision');
+      jsa.date=gv('jsaDate'); 
+      jsa.project_id=gv('projectSelect');
+      break;
+    case 2:
+      jsa.tools               = sc(gv('tools'));
+      jsa.materials           = sc(gv('materials'));
+      jsa.hazardous_materials = sc(gv('hazMats'));
+      break;
+    case 3: 
+      jsa.ppe = collectPPE(); 
+      break;
+    case 4: 
+      collectHazardRows(); 
+      break;
+    case 5:
+      jsa.emergency = { 
+        type:gv('emType'), 
+        procedure:gv('emProcedure'), 
+        assembly_point:gv('emAssembly'), 
+        emergency_number:gv('emNumber')
+      };
+      break;
+    case 6: 
+      collectManpower(); 
+      break;
+    case 7:
+      collectPermits();
+      jsa.prepared_by=gv('preparedBy'); 
+      jsa.reviewed_by=gv('reviewedBy'); 
+      jsa.approved_by=gv('approvedBy');
+      break;
+  }
+}
+
+const sc = str => (str||'').split(',').map(s=>s.trim()).filter(Boolean);
+
+/* ===================== FILL ===================== */
+function fill(s) {
+  if (!jsa) return;
+  const sv = (id,val) => { 
+    const e=document.getElementById(id); 
+    if(e) e.value=val||''; 
+  };
+  
+  switch(s) {
+    case 1:
+      sv('jobName',jsa.job_name); 
+      sv('docNumber',jsa.document_number); 
+      sv('revision',jsa.revision||'0');
+      sv('jsaDate',jsa.date); 
+      if(jsa.project_id) sv('projectSelect',jsa.project_id);
+      break;
+    case 2:
+      sv('tools',(jsa.tools||[]).join(', '));
+      sv('materials',(jsa.materials||[]).join(', '));
+      sv('hazMats',(jsa.hazardous_materials||[]).join(', '));
+      break;
+    case 3: 
+      fillPPE(jsa.ppe); 
+      break;
+    case 4: 
+      renderHazardTable(); 
+      break;
+    case 5:
+      if(jsa.emergency){
+        sv('emType',jsa.emergency.type); 
+        sv('emProcedure',jsa.emergency.procedure);
+        sv('emAssembly',jsa.emergency.assembly_point); 
+        sv('emNumber',jsa.emergency.emergency_number);
+      }
+      break;
+    case 6: 
+      renderManpower(); 
+      break;
+    case 7: 
+      fillPermits(); 
+      sv('preparedBy',jsa.prepared_by); 
+      sv('reviewedBy',jsa.reviewed_by); 
+      sv('approvedBy',jsa.approved_by); 
+      break;
+  }
+}
+
+/* ===================== STEP HTML ===================== */
+function buildHTML(s) {
+  const projs = getAllProjects();
+  const pOpts = projs.map(p=>`<option value="${p.id}">${p.name}${p.client?' — '+p.client:''}</option>`).join('');
+
+  const steps = {
+    1: `<div class="section-title">Informasi Umum</div>
+      <div class="row g-3">
+        <div class="col-12"><label class="form-label">Nama Pekerjaan <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="jobName" placeholder="Pekerjaan Pengelasan Pipa Gas">
+        </div>
+        <div class="col-sm-6"><label class="form-label">No. Dokumen</label>
+          <input type="text" class="form-control" id="docNumber" readonly style="background:var(--surface-2);">
+        </div>
+        <div class="col-sm-3"><label class="form-label">Revisi</label>
+          <input type="text" class="form-control" id="revision" value="0">
+        </div>
+        <div class="col-sm-3"><label class="form-label">Tanggal JSA</label>
+          <input type="date" class="form-control" id="jsaDate">
+        </div>
+        <div class="col-12"><label class="form-label">Proyek</label>
+          <select class="form-select" id="projectSelect">
+            <option value="">-- Pilih Proyek --</option>${pOpts}
+          </select>
+          ${!projs.length?'<div class="form-text text-warning"><i class="bi bi-exclamation-triangle"></i> Belum ada proyek. <a href="project.html">Buat proyek dulu</a></div>':''}
+        </div>
+      </div>`,
+
+    2: `<div class="section-title">Peralatan & Material</div>
+      <div class="row g-3">
+        <div class="col-12"><label class="form-label"><i class="bi bi-tools me-1"></i>Alat Kerja</label>
+          <textarea class="form-control" id="tools" rows="3" placeholder="Pisahkan koma: Mesin Las, Gerinda, Scaffolding..."></textarea>
+        </div>
+        <div class="col-12"><label class="form-label"><i class="bi bi-box-seam me-1"></i>Material</label>
+          <textarea class="form-control" id="materials" rows="3" placeholder="Pisahkan koma: Pipa Baja 4&quot;, Elektroda E7018..."></textarea>
+        </div>
+        <div class="col-12"><label class="form-label"><i class="bi bi-exclamation-triangle me-1 text-warning"></i>Bahan Berbahaya (B3)</label>
+          <textarea class="form-control" id="hazMats" rows="2" placeholder="Pisahkan koma: Gas LPG, Thinner, Asam Sulfat..."></textarea>
+        </div>
+      </div>`,
+
+    3: buildPPEHtml(),
+    4: buildHazardHtml(),
+
+    5: `<div class="section-title">Tindakan Darurat</div>
+      <div class="row g-3">
+        <div class="col-sm-6"><label class="form-label">Jenis Kondisi Darurat</label>
+          <input class="form-control" id="emType" placeholder="Kebakaran, Keracunan Gas...">
+        </div>
+        <div class="col-sm-6"><label class="form-label">Titik Kumpul</label>
+          <input class="form-control" id="emAssembly" placeholder="Lokasi muster point">
+        </div>
+        <div class="col-12"><label class="form-label">Prosedur Tanggap Darurat</label>
+          <textarea class="form-control" id="emProcedure" rows="4" placeholder="1. Hentikan pekerjaan&#10;2. Evakuasi ke titik kumpul&#10;3. Hubungi petugas..."></textarea>
+        </div>
+        <div class="col-sm-6"><label class="form-label">Nomor Darurat</label>
+          <input class="form-control" id="emNumber" placeholder="119 / +62 812-xxx">
+        </div>
+      </div>`,
+
+    6: buildManpowerHtml(),
+    7: buildPermitsHtml()
+  };
+  return steps[s] || '';
+}
+
+/* ---- Step 3: PPE (Work Type Based from data.json) ---- */
+function buildPPEHtml() {
+  let html = `<div class="section-title">APD Berdasarkan Jenis Pekerjaan</div>
+    <div class="alert alert-warning mb-3"><i class="bi bi-exclamation-triangle me-1"></i>Pilih jenis pekerjaan yang akan dilakukan. APD yang direkomendasikan akan otomatis ditampilkan.</div>
+    
+    <div class="work-type-grid">`;
+  
+  // Check if WORK_TYPE_APD has data
+  if (Object.keys(WORK_TYPE_APD).length === 0) {
+    html += `<div class="alert alert-danger"><i class="bi bi-exclamation-circle"></i> Data APD belum dimuat. Silakan refresh halaman.</div>`;
+  } else {
+    Object.entries(WORK_TYPE_APD).forEach(([key, wt]) => {
+      html += `
+        <div class="work-type-toggle" id="wt_${key}">
+          <div class="work-type-header" onclick="toggleWorkType('${key}')">
+            <div class="work-type-check">
+              <input type="checkbox" class="form-check-input" id="wt_check_${key}" onclick="event.stopPropagation(); applyWorkTypeUI('${key}', this.checked)">
+            </div>
+            <div class="work-type-info">
+              <div class="work-type-icon"><i class="bi ${wt.icon}"></i></div>
+              <div class="work-type-label">${wt.label}</div>
+            </div>
+            <i class="bi bi-chevron-down work-type-arrow" id="wt_arrow_${key}"></i>
+          </div>
+          <div class="work-type-items" id="wt_items_${key}" style="display:none;">
+            ${wt.items.map(item => `
+              <label class="work-type-item">
+                <input type="checkbox" class="form-check-input ppe-item-check" 
+                       id="ppe_${item.id}" 
+                       data-work-type="${key}"
+                       data-category="${item.category}"
+                       data-label="${item.label}">
+                <span>${item.label}</span>
+              </label>
+            `).join('')}
+          </div>
+        </div>`;
+    });
+  }
+  
+  html += `</div>
+    
+    <div class="mt-4">
+      <div class="section-title">APD Kustom / Tambahan</div>
+      <textarea class="form-control" id="ppeCustomItems" rows="3" 
+                placeholder="Tulis APD tambahan jika diperlukan (pisahkan dengan koma atau baris baru)..."></textarea>
+      <div class="form-text"><i class="bi bi-info-circle"></i> APD di luar daftar standar di atas dapat ditulis manual di sini.</div>
+    </div>`;
+  
+  return html;
+}
+
+function toggleWorkType(key) {
+  const cb = document.getElementById('wt_check_' + key);
+  if (!cb) return;
+  cb.checked = !cb.checked;
+  applyWorkTypeUI(key, cb.checked);
+}
+
+function applyWorkTypeUI(key, checked) {
+  const items = document.getElementById('wt_items_' + key);
+  const arrow = document.getElementById('wt_arrow_' + key);
+  const card  = document.getElementById('wt_' + key);
+  if (!items || !arrow || !card) return;
+  updateWorkTypeUI(key, checked, items, arrow, card);
+}
+
+function updateWorkTypeUI(key, checked, items, arrow, card) {
+  if (checked) {
+    card.classList.add('active');
+    items.style.display = 'block';
+    arrow.style.transform = 'rotate(180deg)';
+    
+    // Auto-check all items within this work type
+    items.querySelectorAll('.ppe-item-check').forEach(itemCb => {
+      itemCb.checked = true;
+    });
+  } else {
+    card.classList.remove('active');
+    items.style.display = 'none';
+    arrow.style.transform = 'rotate(0deg)';
+    
+    // Uncheck all items within this work type
+    items.querySelectorAll('.ppe-item-check').forEach(itemCb => {
+      itemCb.checked = false;
+    });
+  }
+}
+
+function collectPPE() {
+  const selectedWorkTypes = [];
+  const allSelectedItems = [];
+  
+  // Collect selected work types and their items
+  Object.keys(WORK_TYPE_APD).forEach(key => {
+    const cb = document.getElementById('wt_check_' + key);
+    if (cb && cb.checked) {
+      selectedWorkTypes.push(key);
+      
+      // Collect individual items
+      WORK_TYPE_APD[key].items.forEach(item => {
+        const itemCb = document.getElementById('ppe_' + item.id);
+        if (itemCb && itemCb.checked) {
+          allSelectedItems.push({
+            id: item.id,
+            label: item.label,
+            category: item.category,
+            work_type: key
+          });
+        }
+      });
+    }
+  });
+  
+  // Collect custom items
+  const customText = document.getElementById('ppeCustomItems')?.value || '';
+  const customItems = customText
+    .split(/[\n,]+/)
+    .map(s => s.trim())
+    .filter(Boolean);
+  
+  return {
+    selected_work_types: selectedWorkTypes,
+    items: allSelectedItems,
+    custom_items: customItems
+  };
+}
+
+function fillPPE(ppe) {
+  if (!ppe) return;
+  
+  // Reset all work type toggles first
+  Object.keys(WORK_TYPE_APD).forEach(key => {
+    const cb = document.getElementById('wt_check_' + key);
+    const items = document.getElementById('wt_items_' + key);
+    const arrow = document.getElementById('wt_arrow_' + key);
+    const card = document.getElementById('wt_' + key);
+    
+    if (!cb || !items || !arrow || !card) return;
+    
+    // Uncheck all items first
+    items.querySelectorAll('.ppe-item-check').forEach(itemCb => {
+      itemCb.checked = false;
+    });
+    
+    cb.checked = false;
+    card.classList.remove('active');
+    items.style.display = 'none';
+    arrow.style.transform = 'rotate(0deg)';
+  });
+  
+  // Handle new format (work type based)
+  if (ppe.selected_work_types && Array.isArray(ppe.selected_work_types)) {
+    ppe.selected_work_types.forEach(key => {
+      const cb = document.getElementById('wt_check_' + key);
+      const items = document.getElementById('wt_items_' + key);
+      const arrow = document.getElementById('wt_arrow_' + key);
+      const card = document.getElementById('wt_' + key);
+      
+      if (!cb || !items || !arrow || !card) return;
+      
+      cb.checked = true;
+      card.classList.add('active');
+      items.style.display = 'block';
+      arrow.style.transform = 'rotate(180deg)';
+      
+      // Check items that were saved
+      if (ppe.items && Array.isArray(ppe.items) && ppe.items.length > 0) {
+        items.querySelectorAll('.ppe-item-check').forEach(itemCb => {
+          const itemId = itemCb.id.replace('ppe_', '');
+          const savedItem = ppe.items.find(i => i.id === itemId);
+          itemCb.checked = !!savedItem;
+        });
+      } else {
+        // No item detail saved → check all by default
+        items.querySelectorAll('.ppe-item-check').forEach(itemCb => {
+          itemCb.checked = true;
+        });
+      }
+    });
+  }
+  
+  // Handle legacy PPE format (old style) - migration
+  if (!ppe.selected_work_types && (ppe.kepala || ppe.mata || ppe.pernapasan || ppe.tangan || ppe.kaki || ppe.tubuh || ppe.perangkat_jatuh)) {
+    // Legacy PPE detected - don't auto-select work types, just fill custom
+    const legacyLabels = getPPEList(ppe);
+    if (legacyLabels.length > 0) {
+      const customEl = document.getElementById('ppeCustomItems');
+      if (customEl && !customEl.value) {
+        customEl.value = legacyLabels.join(', ');
+      }
+    }
+  }
+  
+  // Fill custom items
+  if (ppe.custom_items && Array.isArray(ppe.custom_items)) {
+    const customEl = document.getElementById('ppeCustomItems');
+    if (customEl) customEl.value = ppe.custom_items.join(', ');
+  }
+}
+
+/* ---- Step 4: Hazard ---- */
+function buildHazardHtml() {
+  return `<div class="section-title">Identifikasi Bahaya & Pengendalian Risiko</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <p class="text-muted mb-0" style="font-size:.76rem;">Identifikasi bahaya dan pengendalian risiko untuk setiap tahapan pekerjaan</p>
+      <button type="button" class="btn btn-sm btn-primary" onclick="addHazardRow()"><i class="bi bi-plus-lg"></i> Tambah Baris</button>
+    </div>
+    <div class="table-responsive"><table class="hiradc-table">
+      <thead><tr>
+        <th style="width:4%;">No</th>
+        <th style="width:20%;">Tahapan *</th>
+        <th style="width:20%;">Bahaya *</th>
+        <th style="width:16%;">Dampak</th>
+        <th style="width:8%;">Keparahan<br><small>(1-5)</small></th>
+        <th style="width:8%;">Kemungkinan<br><small>(1-5)</small></th>
+        <th style="width:20%;">Pengendalian</th>
+        <th style="width:4%;"></th>
+      </tr></thead>
+      <tbody id="hazardTbody"></tbody>
+    </table></div>`;
+}
+
+function addHazardRow(data={}) {
+  const tbody = document.getElementById('hazardTbody');
+  if (!tbody) return;
+  const idx = tbody.querySelectorAll('tr[data-idx]').length;
+  const tr = document.createElement('tr');
+  tr.setAttribute('data-idx',idx);
+  tr.innerHTML = `
+    <td class="text-center" style="font-weight:700;color:var(--text-3);font-size:.74rem;">${idx+1}</td>
+    <td><textarea class="h-step" rows="2" placeholder="Tahapan kerja...">${data.step||''}</textarea></td>
+    <td><textarea class="h-danger" rows="2" placeholder="Potensi bahaya...">${data.danger||''}</textarea></td>
+    <td><textarea class="h-impact" rows="2" placeholder="Dampak...">${data.impact||''}</textarea></td>
+    <td><select class="h-severity" style="width:100%;font-size:.74rem;padding:3px;">
+      <option value="1" ${(data.severity||1)==1?'selected':''}>1 - Sangat Rendah</option>
+      <option value="2" ${(data.severity||1)==2?'selected':''}>2 - Rendah</option>
+      <option value="3" ${(data.severity||1)==3?'selected':''}>3 - Sedang</option>
+      <option value="4" ${(data.severity||1)==4?'selected':''}>4 - Tinggi</option>
+      <option value="5" ${(data.severity||1)==5?'selected':''}>5 - Kritis</option>
+    </select></td>
+    <td><select class="h-likelihood" style="width:100%;font-size:.74rem;padding:3px;">
+      <option value="1" ${(data.likelihood||1)==1?'selected':''}>1 - Jarang</option>
+      <option value="2" ${(data.likelihood||1)==2?'selected':''}>2 - Kadang</option>
+      <option value="3" ${(data.likelihood||1)==3?'selected':''}>3 - Mungkin</option>
+      <option value="4" ${(data.likelihood||1)==4?'selected':''}>4 - Sering</option>
+      <option value="5" ${(data.likelihood||1)==5?'selected':''}>5 - Selalu</option>
+    </select></td>
+    <td><textarea class="h-ctrl" rows="2" placeholder="Pengendalian...">${data.control||''}</textarea></td>
+    <td class="text-center"><button type="button" class="btn btn-xs btn-outline-danger" onclick="this.closest('tr').remove();renumHazard()"><i class="bi bi-trash"></i></button></td>`;
+  tbody.appendChild(tr);
+}
+
+function renumHazard() {
+  document.querySelectorAll('#hazardTbody tr[data-idx]').forEach((tr,i)=>{
+    tr.setAttribute('data-idx',i);
+    tr.cells[0].textContent=i+1;
+  });
+}
+
+function renderHazardTable() {
+  const tbody = document.getElementById('hazardTbody');
+  if (!tbody) return;
+  
+  document.querySelectorAll('#hazardTbody tr').forEach(tr=>tr.remove());
+  const hazards = jsa.hazard_identification||[];
+  
+  if (hazards.length) {
+    hazards.forEach(h=>addHazardRow(h));
+  } else {
+    addHazardRow(); // Add at least one empty row
+  }
+}
+
+function collectHazardRows() {
+  jsa.hazard_identification=[];
+  document.querySelectorAll('#hazardTbody tr[data-idx]').forEach(row=>{
+    jsa.hazard_identification.push({
+      step:       row.querySelector('.h-step')?.value?.trim()||'',
+      danger:     row.querySelector('.h-danger')?.value?.trim()||'',
+      impact:     row.querySelector('.h-impact')?.value?.trim()||'',
+      severity:   parseInt(row.querySelector('.h-severity')?.value||'1'),
+      likelihood: parseInt(row.querySelector('.h-likelihood')?.value||'1'),
+      control:    row.querySelector('.h-ctrl')?.value?.trim()||''
+    });
+  });
+}
+
+/* ---- Step 6: Manpower ---- */
+function buildManpowerHtml() {
+  return `<div class="section-title">Data Man Power</div>
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <p class="text-muted mb-0" style="font-size:.76rem;">Data pekerja yang terlibat dalam pekerjaan ini.</p>
+      <button type="button" class="btn btn-sm btn-primary" onclick="addManpowerRow()"><i class="bi bi-person-plus"></i> Tambah</button>
+    </div>
+    <div class="table-responsive"><table class="hiradc-table">
+      <thead><tr><th style="width:4%">No</th><th>Nama</th><th>Jabatan</th><th style="width:8%">Aksi</th></tr></thead>
+      <tbody id="manpowerTbody"></tbody>
+    </table></div>`;
+}
+
+function addManpowerRow(data={}) {
+  const tbody=document.getElementById('manpowerTbody');
+  if(!tbody) return;
+  const idx=tbody.querySelectorAll('tr[data-midx]').length;
+  const tr=document.createElement('tr');
+  tr.setAttribute('data-midx',idx);
+  tr.innerHTML=`<td class="text-center" style="font-weight:700;color:var(--text-3);font-size:.74rem;">${idx+1}</td>
+    <td><input type="text" class="mp-name" placeholder="Nama" value="${data.name||''}"></td>
+    <td><input type="text" class="mp-pos" placeholder="Jabatan" value="${data.position||''}"></td>
+    <td class="text-center"><button type="button" class="btn btn-xs btn-outline-danger" onclick="this.closest('tr').remove();renumManpower()"><i class="bi bi-trash"></i></button></td>`;
+  tbody.appendChild(tr);
+}
+
+function renumManpower() { 
+  document.querySelectorAll('#manpowerTbody tr[data-midx]').forEach((tr,i)=>{
+    tr.setAttribute('data-midx',i);
+    tr.cells[0].textContent=i+1;
+  }); 
+}
+
+function renderManpower() { 
+  const tbody = document.getElementById('manpowerTbody');
+  if (!tbody) return;
+  
+  document.querySelectorAll('#manpowerTbody tr').forEach(tr=>tr.remove()); 
+  const manpower = jsa.manpower||[];
+  
+  if (manpower.length) {
+    manpower.forEach(m=>addManpowerRow(m)); 
+  }
+}
+
+function collectManpower() {
+  jsa.manpower=[];
+  document.querySelectorAll('#manpowerTbody tr[data-midx]').forEach(row=>{
+    const name = row.querySelector('.mp-name');
+    const pos = row.querySelector('.mp-pos');
+    
+    jsa.manpower.push({ 
+      name: name ? (name.value?.trim()||'') : '', 
+      position: pos ? (pos.value?.trim()||'') : ''
+    });
+  });
+}
+
+/* ---- Step 7: Permits ---- */
+function buildPermitsHtml() {
+  const defs=[
+    {key:'hot_work',      icon:'🔥',label:'Hot Work (Pekerjaan Panas)'},
+    {key:'confined_space',icon:'🚧',label:'Confined Space (Ruang Terbatas)'},
+    {key:'working_height',icon:'📐',label:'Bekerja di Ketinggian (>1.8m)'},
+    {key:'electrical',    icon:'⚡',label:'Isolasi Listrik (LOTO)'},
+    {key:'lifting',       icon:'🏗️',label:'Lifting & Rigging'},
+    {key:'excavation',    icon:'⛏️',label:'Excavation / Galian'},
+    {key:'pressure_test', icon:'🔧',label:'Pressure Test'},
+    {key:'radiation',     icon:'☢️',label:'Radiasi (Radiography)'}
+  ];
+  let html=`<div class="section-title">Permit to Work & Approval</div>
+    <h6 class="fw-bold mb-2" style="font-size:.84rem;">Permit to Work (PTW)</h6>`;
+  html += defs.map(d=>`
+    <div class="permit-toggle-card" id="ptcard_${d.key}">
+      <div class="permit-toggle-header" onclick="togglePermit('${d.key}')">
+        <input type="checkbox" class="form-check-input" id="pt_${d.key}" onclick="event.stopPropagation();togglePermit('${d.key}')">
+        <span class="permit-toggle-label">${d.icon} ${d.label}</span>
+        <i class="bi bi-chevron-right permit-toggle-arrow"></i>
+      </div>
+      <div class="permit-toggle-body" id="ptbody_${d.key}">
+        <p class="text-muted mb-0" style="font-size:.74rem;">Permit ini diperlukan untuk pekerjaan ini.</p>
+      </div>
+    </div>`).join('');
+  html += `<div class="mt-2 mb-4"><label class="form-label">Permit Lainnya</label>
+    <input type="text" class="form-control" id="ptOther" placeholder="Nama permit lain jika ada..."></div>
+    <hr>
+    <h6 class="fw-bold mb-3" style="font-size:.84rem;">Approval & Pengesahan</h6>
+    <div class="row g-3">
+      <div class="col-sm-4"><label class="form-label">Disusun Oleh</label><input type="text" class="form-control" id="preparedBy" placeholder="Nama & Jabatan"></div>
+      <div class="col-sm-4"><label class="form-label">Diperiksa Oleh</label><input type="text" class="form-control" id="reviewedBy" placeholder="Nama & Jabatan"></div>
+      <div class="col-sm-4"><label class="form-label">Disetujui Oleh</label><input type="text" class="form-control" id="approvedBy" placeholder="Nama & Jabatan"></div>
+    </div>`;
+  return html;
+}
+
+function togglePermit(key) {
+  const cb=document.getElementById('pt_'+key), 
+        card=document.getElementById('ptcard_'+key);
+  if (!cb || !card) return;
+  
+  const on = cb.checked;
+  card.classList.toggle('active', on);
+}
+
+function fillPermits() {
+  if(!jsa.permits) return;
+  const keys=['hot_work','confined_space','working_height','electrical','lifting','excavation','pressure_test','radiation'];
+  keys.forEach(key=>{
+    const pm=jsa.permits[key]; 
+    if(!pm) return;
+    const cb=document.getElementById('pt_'+key); 
+    if(cb){
+      cb.checked=pm.required||false; 
+      if(pm.required) {
+        togglePermit(key);
+      }
+    }
+  });
+  const oe=document.getElementById('ptOther'); 
+  if(oe) oe.value=jsa.permits.other||'';
+}
+
+function collectPermits() {
+  const keys=['hot_work','confined_space','working_height','electrical','lifting','excavation','pressure_test','radiation'];
+  jsa.permits={};
+  keys.forEach(key=>{
+    const cb = document.getElementById('pt_'+key);
+    
+    jsa.permits[key]={
+      required:  cb ? (cb.checked||false) : false
+    };
+  });
+  const ptOther = document.getElementById('ptOther');
+  jsa.permits.other = ptOther ? (ptOther.value||'') : '';
+}
+</script>
+</body>
+</html>

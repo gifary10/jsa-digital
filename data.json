@@ -1,0 +1,97 @@
+{
+  "work_type_apd": {
+    "welding": {
+      "label": "Welding (Pengelasan)",
+      "icon": "bi-fire",
+      "items": [
+        { "id": "welding_helmet", "label": "Helm Las (Auto Darkening)", "category": "kepala" },
+        { "id": "safety_glasses_weld", "label": "Kacamata Safety", "category": "mata" },
+        { "id": "leather_gloves", "label": "Sarung Tangan Tahan Panas (Leather)", "category": "tangan" },
+        { "id": "fire_resistant_apron", "label": "Apron / Baju Tahan Api", "category": "tubuh" },
+        { "id": "safety_shoes_weld", "label": "Sepatu Safety (Steel Toe)", "category": "kaki" },
+        { "id": "respirator_weld", "label": "Masker / Respirator", "category": "pernapasan" },
+        { "id": "ear_protection_weld", "label": "Pelindung Telinga (Earplug / Earmuff)", "category": "telinga" }
+      ]
+    },
+    "electrical": {
+      "label": "Pekerjaan Listrik",
+      "icon": "bi-lightning-charge",
+      "items": [
+        { "id": "non_conductive_helmet", "label": "Helm Safety (Non-Conductive)", "category": "kepala" },
+        { "id": "electrical_gloves", "label": "Sarung Tangan Isolasi Listrik", "category": "tangan" },
+        { "id": "electrical_shoes", "label": "Sepatu Safety Anti Listrik", "category": "kaki" },
+        { "id": "face_shield_elec", "label": "Kacamata Safety / Face Shield", "category": "mata" },
+        { "id": "arc_flash_suit", "label": "Arc Flash Suit (Tegangan Tinggi)", "category": "tubuh" },
+        { "id": "voltage_detector", "label": "Alat Deteksi Tegangan", "category": "lainnya" }
+      ]
+    },
+    "working_height": {
+      "label": "Pekerjaan di Ketinggian",
+      "icon": "bi-arrow-up",
+      "items": [
+        { "id": "full_body_harness", "label": "Full Body Harness", "category": "perangkat_jatuh" },
+        { "id": "lanyard_lifeline", "label": "Lanyard + Lifeline", "category": "perangkat_jatuh" },
+        { "id": "helmet_chin_strap", "label": "Helm Safety dengan Chin Strap", "category": "kepala" },
+        { "id": "anti_slip_shoes", "label": "Sepatu Anti Slip", "category": "kaki" },
+        { "id": "work_gloves_height", "label": "Sarung Tangan Kerja", "category": "tangan" }
+      ]
+    },
+    "chemical": {
+      "label": "Pekerjaan Kimia",
+      "icon": "bi-droplet",
+      "items": [
+        { "id": "chemical_suit", "label": "Baju Pelindung (Chemical Suit / Lab Coat)", "category": "tubuh" },
+        { "id": "chemical_gloves", "label": "Sarung Tangan Tahan Bahan Kimia", "category": "tangan" },
+        { "id": "goggles_chem", "label": "Kacamata Safety / Goggles", "category": "mata" },
+        { "id": "face_shield_chem", "label": "Face Shield", "category": "mata" },
+        { "id": "respirator_chem", "label": "Respirator / Masker Khusus", "category": "pernapasan" },
+        { "id": "rubber_boots_chem", "label": "Sepatu Boot Karet", "category": "kaki" }
+      ]
+    },
+    "high_noise": {
+      "label": "Pekerjaan dengan Kebisingan Tinggi",
+      "icon": "bi-volume-up",
+      "items": [
+        { "id": "earplug", "label": "Earplug", "category": "telinga" },
+        { "id": "earmuff", "label": "Earmuff", "category": "telinga" },
+        { "id": "helmet_noise", "label": "Helm Safety", "category": "kepala" },
+        { "id": "safety_glasses_noise", "label": "Kacamata Safety", "category": "mata" }
+      ]
+    },
+    "mechanical": {
+      "label": "Pekerjaan Mekanik / Bengkel",
+      "icon": "bi-gear",
+      "items": [
+        { "id": "safety_glasses_mech", "label": "Kacamata Safety", "category": "mata" },
+        { "id": "work_gloves_mech", "label": "Sarung Tangan Kerja", "category": "tangan" },
+        { "id": "safety_shoes_mech", "label": "Sepatu Safety", "category": "kaki" },
+        { "id": "coverall", "label": "Coverall / Wearpack", "category": "tubuh" },
+        { "id": "face_shield_grinding", "label": "Face Shield (Jika Grinding)", "category": "mata" }
+      ]
+    },
+    "general_construction": {
+      "label": "Konstruksi Umum",
+      "icon": "bi-building",
+      "items": [
+        { "id": "helmet_const", "label": "Helm Safety", "category": "kepala" },
+        { "id": "reflective_vest", "label": "Rompi Reflektif", "category": "tubuh" },
+        { "id": "safety_shoes_const", "label": "Sepatu Safety", "category": "kaki" },
+        { "id": "work_gloves_const", "label": "Sarung Tangan", "category": "tangan" },
+        { "id": "safety_glasses_const", "label": "Kacamata Safety", "category": "mata" },
+        { "id": "dust_mask_const", "label": "Masker Debu", "category": "pernapasan" }
+      ]
+    },
+    "grinding_cutting": {
+      "label": "Grinding / Cutting",
+      "icon": "bi-tools",
+      "items": [
+        { "id": "face_shield_grind", "label": "Face Shield", "category": "mata" },
+        { "id": "safety_glasses_grind", "label": "Kacamata Safety", "category": "mata" },
+        { "id": "gloves_grind", "label": "Sarung Tangan", "category": "tangan" },
+        { "id": "apron_grind", "label": "Apron", "category": "tubuh" },
+        { "id": "safety_shoes_grind", "label": "Sepatu Safety", "category": "kaki" },
+        { "id": "respirator_grind", "label": "Masker Debu / Respirator", "category": "pernapasan" }
+      ]
+    }
+  }
+}
